@@ -108,3 +108,28 @@ func TestShaperIsSafeForConcurrentUse(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+func TestShaperRightToLeftTextKeepsClusters(t *testing.T) {
+	sfnt := loadTestSFNT(t, "../resources/unifont-13.0.05.ttf")
+	shaper, err := NewShaperSFNT(sfnt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, text := range []string{"شاورما دجاج", "صلصة إضافية من فضلك", "طلب 12"} {
+		for _, direction := range []Direction{RightToLeft, DirectionInvalid} {
+			glyphs := shaper.Shape(text, 16, direction, Arabic, "ar", "", "")
+			if len(glyphs) == 0 {
+				t.Fatalf("%q: no glyphs", text)
+			}
+			// Every rune is covered by exactly one glyph's text, so the glyph
+			// texts reassemble the input in logical (reverse visual) order.
+			got := ""
+			for i := len(glyphs) - 1; 0 <= i; i-- {
+				got += glyphs[i].Text
+			}
+			if got != text {
+				t.Fatalf("%q direction %v: glyph texts reassemble to %q", text, direction, got)
+			}
+		}
+	}
+}

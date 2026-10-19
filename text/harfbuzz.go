@@ -82,7 +82,8 @@ func (s Shaper) shape(buf *harfbuzz.Buffer, text string, direction Direction, sc
 	buf.Props.Direction = harfbuzz.Direction(direction)
 	buf.Props.Script = language.Script(script)
 	buf.Props.Language = language.NewLanguage(lang)
-	buf.GuessSegmentProperties() // only sets direction, script, and language if unset
+	buf.GuessSegmentProperties()               // only sets direction, script, and language if unset
+	direction = Direction(buf.Props.Direction) // direction may have been overridden
 	buf.Shape(s.font, parseFeatures(features))
 
 	runeMap := make([]int, len(rtext)+1)
@@ -104,9 +105,19 @@ func (s Shaper) shape(buf *harfbuzz.Buffer, text string, direction Direction, sc
 		glyphs[i].XOffset = int32(position.XOffset)
 		glyphs[i].YOffset = int32(position.YOffset)
 
+		// Glyphs of a right-to-left run come in visual order, so their clusters
+		// decrease and the cluster that follows this one in the text belongs to
+		// the previous glyph. Backported from upstream tdewolff/canvas.
 		end := len(rtext)
-		if i+1 < len(buf.Info) {
+		if direction == RightToLeft || direction == BottomToTop {
+			if 0 < i {
+				end = buf.Info[i-1].Cluster
+			}
+		} else if i+1 < len(buf.Info) {
 			end = buf.Info[i+1].Cluster
+		}
+		if end < info.Cluster || len(rtext) < end {
+			continue // should not happen
 		}
 		glyphs[i].Text = string(rtext[info.Cluster:end])
 	}
