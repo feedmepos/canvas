@@ -7,8 +7,8 @@ package main
 import (
 	"syscall/js"
 
-	"github.com/tdewolff/canvas"
-	"github.com/tdewolff/canvas/renderers/htmlcanvas"
+	"github.com/feedmepos/canvas"
+	"github.com/feedmepos/canvas/renderers/htmlcanvas"
 )
 
 func main() {

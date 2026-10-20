@@ -3,8 +3,8 @@ package main
 import (
 	"image/color"
 
-	"github.com/tdewolff/canvas"
-	"github.com/tdewolff/canvas/renderers"
+	"github.com/feedmepos/canvas"
+	"github.com/feedmepos/canvas/renderers"
 )
 
 var font *canvas.FontFamily

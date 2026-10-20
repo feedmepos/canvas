@@ -9,7 +9,7 @@ import (
 	"gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
-	"github.com/tdewolff/canvas"
+	"github.com/feedmepos/canvas"
 )
 
 type Gio struct {

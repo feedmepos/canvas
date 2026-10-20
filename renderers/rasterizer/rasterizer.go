@@ -5,9 +5,9 @@ import (
 	"image/color"
 	"math"
 
+	"github.com/feedmepos/canvas"
 	"github.com/srwiley/rasterx"
 	"github.com/srwiley/scanx"
-	"github.com/tdewolff/canvas"
 	"golang.org/x/image/draw"
 	"golang.org/x/image/math/f64"
 )

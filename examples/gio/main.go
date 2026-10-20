@@ -7,8 +7,8 @@ import (
 	"gioui.org/app"
 	"gioui.org/layout"
 	"gioui.org/op"
-	"github.com/tdewolff/canvas"
-	"github.com/tdewolff/canvas/renderers/gio"
+	"github.com/feedmepos/canvas"
+	"github.com/feedmepos/canvas/renderers/gio"
 )
 
 func main() {

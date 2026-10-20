@@ -18,9 +18,9 @@ import (
 	"golang.org/x/text/encoding/charmap"
 	"golang.org/x/text/unicode/norm"
 
-	"github.com/tdewolff/canvas"
-	"github.com/tdewolff/canvas/text"
-	canvasText "github.com/tdewolff/canvas/text"
+	"github.com/feedmepos/canvas"
+	"github.com/feedmepos/canvas/text"
+	canvasText "github.com/feedmepos/canvas/text"
 	canvasFont "github.com/tdewolff/font"
 )
 

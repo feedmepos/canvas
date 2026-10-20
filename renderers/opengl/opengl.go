@@ -7,9 +7,9 @@ import (
 	"image"
 	"strings"
 
+	"github.com/feedmepos/canvas"
+	"github.com/feedmepos/canvas/renderers/rasterizer"
 	"github.com/go-gl/gl/v3.3-core/gl"
-	"github.com/tdewolff/canvas"
-	"github.com/tdewolff/canvas/renderers/rasterizer"
 )
 
 // OpenGL is an open graphics library renderer.
