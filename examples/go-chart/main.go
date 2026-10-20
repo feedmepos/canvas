@@ -4,9 +4,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/feedmepos/canvas"
+	"github.com/feedmepos/canvas/renderers"
 	"github.com/golang/freetype/truetype"
-	"github.com/tdewolff/canvas"
-	"github.com/tdewolff/canvas/renderers"
 	"github.com/wcharczuk/go-chart/v2"
 	"github.com/wcharczuk/go-chart/v2/drawing"
 )

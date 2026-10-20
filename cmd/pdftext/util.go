@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tdewolff/canvas"
+	"github.com/feedmepos/canvas"
 	"github.com/tdewolff/minify/v2"
 )
 

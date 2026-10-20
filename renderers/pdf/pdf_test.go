@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tdewolff/canvas"
+	"github.com/feedmepos/canvas"
 	"github.com/tdewolff/test"
 )
 

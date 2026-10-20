@@ -7,9 +7,9 @@ import (
 	"io"
 
 	"github.com/Kagami/go-avif"
+	"github.com/feedmepos/canvas"
+	"github.com/feedmepos/canvas/renderers/rasterizer"
 	webp "github.com/kolesa-team/go-webp/encoder"
-	"github.com/tdewolff/canvas"
-	"github.com/tdewolff/canvas/renderers/rasterizer"
 )
 
 func WebP(opts ...interface{}) canvas.Writer {
