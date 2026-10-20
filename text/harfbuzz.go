@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	typesettingFont "github.com/go-text/typesetting/font"
 	"github.com/go-text/typesetting/font/opentype"
@@ -18,8 +19,17 @@ import (
 
 // Shaper is a text shaper formatting a string in properly positioned glyphs.
 type Shaper struct {
-	sfnt *font.SFNT
-	font *harfbuzz.Font
+	sfnt  *font.SFNT
+	font  *harfbuzz.Font
+	cache *shapeCache
+}
+
+// shapeCache holds one HarfBuzz buffer per shaper. HarfBuzz caches shape plans
+// on the buffer, so reusing it avoids rebuilding the plan on every Shape call.
+// The mutex makes Shape safe for concurrent use.
+type shapeCache struct {
+	mu  sync.Mutex
+	buf *harfbuzz.Buffer
 }
 
 // NewShaper returns a new text shaper.
@@ -33,7 +43,8 @@ func NewShaper(b []byte, _ int) (Shaper, error) {
 		return Shaper{}, err
 	}
 	return Shaper{
-		font: harfbuzz.NewFont(&typesettingFont.Face{Font: font}),
+		font:  harfbuzz.NewFont(&typesettingFont.Face{Font: font}),
+		cache: &shapeCache{},
 	}, nil
 }
 
@@ -51,14 +62,28 @@ func (s Shaper) Destroy() {
 
 // Shape shapes the string for a given direction, script, and language.
 func (s Shaper) Shape(text string, ppem uint16, direction Direction, script Script, lang string, features string, variations string) []Glyph {
-	buf := harfbuzz.NewBuffer()
+	if s.cache == nil {
+		return s.shape(harfbuzz.NewBuffer(), text, direction, script, lang, features)
+	}
+	s.cache.mu.Lock()
+	defer s.cache.mu.Unlock()
+	if s.cache.buf == nil {
+		s.cache.buf = harfbuzz.NewBuffer()
+	} else {
+		s.cache.buf.Clear()
+	}
+	return s.shape(s.cache.buf, text, direction, script, lang, features)
+}
+
+func (s Shaper) shape(buf *harfbuzz.Buffer, text string, direction Direction, script Script, lang string, features string) []Glyph {
 	rtext := []rune(text)
 	buf.AddRunes(rtext, 0, -1)
 	buf.ClusterLevel = harfbuzz.MonotoneCharacters
 	buf.Props.Direction = harfbuzz.Direction(direction)
 	buf.Props.Script = language.Script(script)
 	buf.Props.Language = language.NewLanguage(lang)
-	buf.GuessSegmentProperties() // only sets direction, script, and language if unset
+	buf.GuessSegmentProperties()               // only sets direction, script, and language if unset
+	direction = Direction(buf.Props.Direction) // direction may have been overridden
 	buf.Shape(s.font, parseFeatures(features))
 
 	runeMap := make([]int, len(rtext)+1)
@@ -80,9 +105,19 @@ func (s Shaper) Shape(text string, ppem uint16, direction Direction, script Scri
 		glyphs[i].XOffset = int32(position.XOffset)
 		glyphs[i].YOffset = int32(position.YOffset)
 
+		// Glyphs of a right-to-left run come in visual order, so their clusters
+		// decrease and the cluster that follows this one in the text belongs to
+		// the previous glyph. Backported from upstream tdewolff/canvas.
 		end := len(rtext)
-		if i+1 < len(buf.Info) {
+		if direction == RightToLeft || direction == BottomToTop {
+			if 0 < i {
+				end = buf.Info[i-1].Cluster
+			}
+		} else if i+1 < len(buf.Info) {
 			end = buf.Info[i+1].Cluster
+		}
+		if end < info.Cluster || len(rtext) < end {
+			continue // should not happen
 		}
 		glyphs[i].Text = string(rtext[info.Cluster:end])
 	}

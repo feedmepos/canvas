@@ -270,14 +270,35 @@ func LoadFontCollection(filename string, index int, style FontStyle) (*Font, err
 
 var nonameFonts = 0
 
+// FontOptions configures how LoadFontWithOptions loads a font.
+type FontOptions struct {
+	// ExcludeOutlinesFromShaper builds the text shaper from a copy of the font
+	// without glyph outline tables (glyf, loca, gvar, CFF, CFF2). Drawing still
+	// uses the outlines in Font.SFNT. The shaper only reads outlines for glyph
+	// extents in HarfBuzz's fallback mark positioning, so fonts that position
+	// their marks through GPOS shape identically while the shaper uses a
+	// fraction of the memory. This matters for large fonts such as CJK faces.
+	ExcludeOutlinesFromShaper bool
+}
+
 // LoadFont loads a font from memory.
 func LoadFont(b []byte, index int, style FontStyle) (*Font, error) {
+	return LoadFontWithOptions(b, index, style, FontOptions{})
+}
+
+// LoadFontWithOptions loads a font from memory with the given options.
+func LoadFontWithOptions(b []byte, index int, style FontStyle, options FontOptions) (*Font, error) {
 	SFNT, err := font.ParseFont(b, index)
 	if err != nil {
 		return nil, err
 	}
 
-	shaper, err := text.NewShaperSFNT(SFNT)
+	var shaper text.Shaper
+	if options.ExcludeOutlinesFromShaper {
+		shaper, err = text.NewShaperSFNTWithoutOutlines(SFNT)
+	} else {
+		shaper, err = text.NewShaperSFNT(SFNT)
+	}
 	if err != nil {
 		return nil, err
 	}
